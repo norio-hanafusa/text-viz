@@ -160,6 +160,7 @@
       <li><a href="#network">共起ネットワーク</a></li>
       <li><a href="#ca">対応分析</a></li>
       <li><a href="#cluster">クラスタリング</a></li>
+      <li><a href="#som">自己組織化マップ (SOM)</a></li>
       <li><a href="#feat">特徴語抽出</a></li>
       <li><a href="#topic">トピックモデル</a></li>
       <li><a href="#embed">分散表現</a></li>
@@ -635,8 +636,188 @@
 
 
   <!-- ============================================================= -->
+  <section id="som">
+    <h2>8. 自己組織化マップ (SOM)</h2>
+    <p class="lead">
+      Kohonen (1982) が提案したニューラルネットワーク型の可視化手法。
+      高次元の文書ベクトルを **2 次元格子(マップ)上に配置**して、
+      似た文書が**近くのセルに集まる**ように学習する。
+    </p>
+
+    <h3>仕組みを 1 枚で</h3>
+    <div class="diagram">
+      <svg viewBox="0 0 640 340" width="640">
+        <!-- Left: input vectors -->
+        <text x="10" y="20" font-size="13" fill="#2c5282" font-weight="600">入力: 高次元ベクトル</text>
+        <g fill="#bee3f8" stroke="#2c5282">
+          <rect x="10" y="35" width="80" height="14"/>
+          <rect x="10" y="55" width="80" height="14"/>
+          <rect x="10" y="75" width="80" height="14"/>
+          <rect x="10" y="95" width="80" height="14"/>
+          <rect x="10" y="115" width="80" height="14"/>
+        </g>
+        <text x="50" y="46" text-anchor="middle" font-size="10" fill="#2a4365">文書 1</text>
+        <text x="50" y="66" text-anchor="middle" font-size="10" fill="#2a4365">文書 2</text>
+        <text x="50" y="86" text-anchor="middle" font-size="10" fill="#2a4365">文書 3</text>
+        <text x="50" y="106" text-anchor="middle" font-size="10" fill="#2a4365">…</text>
+        <text x="50" y="126" text-anchor="middle" font-size="10" fill="#2a4365">文書 N</text>
+        <text x="50" y="150" text-anchor="middle" font-size="10" fill="#4a5568">(768 次元 SBERT 等)</text>
+
+        <!-- Arrow -->
+        <line x1="100" y1="80" x2="150" y2="130" stroke="#4a5568" stroke-width="2" marker-end="url(#somarr)"/>
+        <text x="102" y="105" font-size="11" fill="#4a5568" transform="rotate(45 102 105)">学習</text>
+
+        <!-- Right: 2D grid -->
+        <text x="180" y="20" font-size="13" fill="#2c5282" font-weight="600">出力: 2D 格子</text>
+        <g>
+          <!-- 5x5 grid with fill based on cluster tendency -->
+          <!-- Row 0 -->
+          <rect x="180" y="35" width="40" height="40" fill="#bee3f8" stroke="#4a5568"/>
+          <rect x="220" y="35" width="40" height="40" fill="#bee3f8" stroke="#4a5568"/>
+          <rect x="260" y="35" width="40" height="40" fill="#cbd5e0" stroke="#4a5568"/>
+          <rect x="300" y="35" width="40" height="40" fill="#feebc8" stroke="#4a5568"/>
+          <rect x="340" y="35" width="40" height="40" fill="#fed7d7" stroke="#4a5568"/>
+          <!-- Row 1 -->
+          <rect x="180" y="75" width="40" height="40" fill="#bee3f8" stroke="#4a5568"/>
+          <rect x="220" y="75" width="40" height="40" fill="#bee3f8" stroke="#4a5568"/>
+          <rect x="260" y="75" width="40" height="40" fill="#cbd5e0" stroke="#4a5568"/>
+          <rect x="300" y="75" width="40" height="40" fill="#feebc8" stroke="#4a5568"/>
+          <rect x="340" y="75" width="40" height="40" fill="#fed7d7" stroke="#4a5568"/>
+          <!-- Row 2 (boundary / U-Matrix dark) -->
+          <rect x="180" y="115" width="40" height="40" fill="#cbd5e0" stroke="#4a5568"/>
+          <rect x="220" y="115" width="40" height="40" fill="#a0aec0" stroke="#4a5568"/>
+          <rect x="260" y="115" width="40" height="40" fill="#718096" stroke="#4a5568"/>
+          <rect x="300" y="115" width="40" height="40" fill="#a0aec0" stroke="#4a5568"/>
+          <rect x="340" y="115" width="40" height="40" fill="#cbd5e0" stroke="#4a5568"/>
+          <!-- Row 3 -->
+          <rect x="180" y="155" width="40" height="40" fill="#c6f6d5" stroke="#4a5568"/>
+          <rect x="220" y="155" width="40" height="40" fill="#c6f6d5" stroke="#4a5568"/>
+          <rect x="260" y="155" width="40" height="40" fill="#b2f5ea" stroke="#4a5568"/>
+          <rect x="300" y="155" width="40" height="40" fill="#b2f5ea" stroke="#4a5568"/>
+          <rect x="340" y="155" width="40" height="40" fill="#e9d8fd" stroke="#4a5568"/>
+          <!-- Row 4 -->
+          <rect x="180" y="195" width="40" height="40" fill="#c6f6d5" stroke="#4a5568"/>
+          <rect x="220" y="195" width="40" height="40" fill="#c6f6d5" stroke="#4a5568"/>
+          <rect x="260" y="195" width="40" height="40" fill="#b2f5ea" stroke="#4a5568"/>
+          <rect x="300" y="195" width="40" height="40" fill="#b2f5ea" stroke="#4a5568"/>
+          <rect x="340" y="195" width="40" height="40" fill="#e9d8fd" stroke="#4a5568"/>
+        </g>
+
+        <!-- Sample doc labels on grid -->
+        <text x="200" y="59" text-anchor="middle" font-size="9" fill="#2a4365">透析</text>
+        <text x="240" y="99" text-anchor="middle" font-size="9" fill="#2a4365">HD</text>
+        <text x="360" y="59" text-anchor="middle" font-size="9" fill="#742a2a">心不全</text>
+        <text x="320" y="59" text-anchor="middle" font-size="9" fill="#744210">高血圧</text>
+        <text x="200" y="219" text-anchor="middle" font-size="9" fill="#22543d">肺炎</text>
+        <text x="280" y="219" text-anchor="middle" font-size="9" fill="#234e52">感染</text>
+        <text x="360" y="219" text-anchor="middle" font-size="9" fill="#44337a">術後</text>
+
+        <!-- Legend -->
+        <text x="420" y="50" font-size="12" fill="#2c5282" font-weight="600">凡例</text>
+        <rect x="420" y="60" width="16" height="16" fill="#bee3f8" stroke="#4a5568"/>
+        <text x="442" y="73" font-size="11" fill="#4a5568">透析関連</text>
+        <rect x="420" y="80" width="16" height="16" fill="#fed7d7" stroke="#4a5568"/>
+        <text x="442" y="93" font-size="11" fill="#4a5568">循環器</text>
+        <rect x="420" y="100" width="16" height="16" fill="#c6f6d5" stroke="#4a5568"/>
+        <text x="442" y="113" font-size="11" fill="#4a5568">呼吸器</text>
+        <rect x="420" y="120" width="16" height="16" fill="#e9d8fd" stroke="#4a5568"/>
+        <text x="442" y="133" font-size="11" fill="#4a5568">外科・術後</text>
+        <rect x="420" y="140" width="16" height="16" fill="#718096" stroke="#4a5568"/>
+        <text x="442" y="153" font-size="11" fill="#4a5568">境界 (U-Matrix)</text>
+
+        <!-- Caption -->
+        <text x="10" y="275" font-size="12" fill="#4a5568">
+          <tspan x="10" dy="0">近い文書は<strong>近いセル</strong>に、似ていない文書は<strong>離れたセル</strong>に配置される。</tspan>
+          <tspan x="10" dy="18">セル間の色が<strong>暗い(灰色)</strong>部分は<strong>クラスタ境界</strong> — U-Matrix 可視化の原理。</tspan>
+          <tspan x="10" dy="18" fill="#2c5282" font-weight="600">→ クラスタ数を指定せず自動で発見でき、同時に位相関係も保存できるのが強み。</tspan>
+        </text>
+
+        <defs>
+          <marker id="somarr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#4a5568"/>
+          </marker>
+        </defs>
+      </svg>
+    </div>
+
+    <h3>学習アルゴリズム(概要)</h3>
+    <ol>
+      <li><strong>初期化</strong>: 格子 (x × y) の各セルに重みベクトルをランダム配置</li>
+      <li><strong>勝者選定 (BMU)</strong>: 入力ベクトルに最も近いセル(Best Matching Unit)を選ぶ</li>
+      <li><strong>重み更新</strong>: BMU と近傍のセルの重みを入力側に引き寄せる</li>
+      <li>これを全入力・全反復で繰り返すと「近い入力は近いセルに集まる」マップが完成</li>
+    </ol>
+
+    <h3>U-Matrix の読み方</h3>
+    <p>text-viz が出力する U-Matrix(Unified Distance Matrix)は**近傍セル間の距離**をヒートマップ化したもの。</p>
+    <table>
+      <tr><th>セルの色</th><th>意味</th><th>解釈</th></tr>
+      <tr>
+        <td><span class="badge badge-gray">明るい(白〜薄灰)</span></td>
+        <td>近傍と距離が小さい</td>
+        <td>同じクラスタ内 — 連続した話題</td>
+      </tr>
+      <tr>
+        <td><span class="badge" style="background:#718096;color:white">暗い(濃灰〜黒)</span></td>
+        <td>近傍と距離が大きい</td>
+        <td><strong>クラスタ境界</strong> — 話題の切れ目</td>
+      </tr>
+    </table>
+
+    <div class="tip">
+      暗い線が格子を分断するように走っていたら、そこで話題が切り替わっている。
+      明るい領域の「面積」がクラスタの規模の目安になる。
+    </div>
+
+    <h3>text-viz での使い方</h3>
+    <div class="card">
+      <dl class="meta-grid">
+        <dt>パラメータ</dt>
+        <dd>
+          <strong>X × Y</strong>: 格子のサイズ (既定 10×10)。データ件数の √N × √N が目安。<br>
+          <strong>iterations</strong>: 学習反復数 (既定 500)。少ないと収束不足、多すぎると過学習傾向。
+        </dd>
+        <dt>入力</dt>
+        <dd>自動的に TF-IDF ベクトル化した文書行列を使用</dd>
+        <dt>出力</dt>
+        <dd>U-Matrix ヒートマップ(matplotlib)</dd>
+      </dl>
+    </div>
+
+    <h3>他のクラスタリング手法との比較</h3>
+    <table>
+      <tr><th>観点</th><th>KMeans</th><th>階層</th><th>UMAP</th><th>SOM</th></tr>
+      <tr><td>クラスタ数</td><td>要指定 (k)</td><td>不要</td><td>不要</td><td>不要(格子サイズで決定)</td></tr>
+      <tr><td>トポロジー保存</td><td>×</td><td>△</td><td>○</td><td><strong>◎</strong></td></tr>
+      <tr><td>非線形構造</td><td>×</td><td>△</td><td>◎</td><td>◎</td></tr>
+      <tr><td>解釈性</td><td>◎(重心)</td><td>◎(樹形)</td><td>△</td><td>○(格子 + U-Matrix)</td></tr>
+      <tr><td>外れ値</td><td>弱い</td><td>弱い</td><td>強い</td><td>強い(孤立セルで検出)</td></tr>
+      <tr><td>大規模</td><td>◎</td><td>×</td><td>◎</td><td>△(格子サイズに依存)</td></tr>
+    </table>
+
+    <div class="note">
+      <strong>SOM が向いている場面</strong>:
+      <ul style="margin:8px 0 0;">
+        <li>クラスタ数が事前に分からない</li>
+        <li>話題の「連続性・位相」を見たい(近い話題が近くに配置される)</li>
+        <li>数百〜数千文書をヒートマップ的に俯瞰したい</li>
+        <li>外れ値(孤立した独特な文書)を目視で見つけたい</li>
+      </ul>
+    </div>
+
+    <h3>制限と注意点</h3>
+    <ul>
+      <li><strong>初期化依存性</strong>: 乱数シードで結果が変わる。安定させたい場合は複数回試行</li>
+      <li><strong>格子サイズの選択</strong>: 小さすぎるとセルに文書が詰め込まれ、大きすぎると空セルが多く荒くなる</li>
+      <li><strong>計算コスト</strong>: 反復数 × データ件数 × 格子サイズ に比例。1 万件 × 20×20 で数分</li>
+      <li><strong>次元の呪い</strong>: 超高次元(1 万次元超)では事前に PCA/UMAP で次元削減すると良い</li>
+    </ul>
+  </section>
+
+
+  <!-- ============================================================= -->
   <section id="feat">
-    <h2>8. 特徴語抽出 — グループ別の代表語</h2>
+    <h2>9. 特徴語抽出 — グループ別の代表語</h2>
     <p class="lead">カテゴリ変数ごとに「そのグループで特に多い語」を統計的に抽出する。</p>
 
     <table>
@@ -664,7 +845,7 @@
 
   <!-- ============================================================= -->
   <section id="topic">
-    <h2>9. トピックモデル — LDA / NMF</h2>
+    <h2>10. トピックモデル — LDA / NMF</h2>
     <p class="lead">各文書の潜在的な「話題(トピック)」を教師なしで抽出する。</p>
 
     <div class="diagram">
@@ -748,7 +929,7 @@
 
   <!-- ============================================================= -->
   <section id="embed">
-    <h2>10. 分散表現 — Word2Vec / SBERT</h2>
+    <h2>11. 分散表現 — Word2Vec / SBERT</h2>
     <p class="lead">単語や文書を「意味」を反映する固定次元ベクトルに変換する。</p>
 
     <div class="diagram">
@@ -798,7 +979,7 @@
 
   <!-- ============================================================= -->
   <section id="sim">
-    <h2>11. 類似検索 — FAISS</h2>
+    <h2>12. 類似検索 — FAISS</h2>
     <p class="lead">自由文クエリから意味的に近い文書を瞬時に検索する。</p>
 
     <h3>コサイン類似度</h3>
@@ -825,7 +1006,7 @@
 
   <!-- ============================================================= -->
   <section id="ner">
-    <h2>12. 固有表現抽出 (NER)</h2>
+    <h2>13. 固有表現抽出 (NER)</h2>
     <p class="lead">テキストから人名・組織・場所・日付などの「固有名詞 / 特定の表現」を自動で抽出する。</p>
 
     <h3>GiNZA の主要ラベル</h3>
@@ -848,7 +1029,7 @@
 
   <!-- ============================================================= -->
   <section id="dep">
-    <h2>13. 係り受け解析</h2>
+    <h2>14. 係り受け解析</h2>
     <p class="lead">語と語の文法的な関係を抽出し、述語項構造(「何を」「どうする」「誰が」)を得る。</p>
 
     <div class="diagram">
@@ -900,7 +1081,7 @@
 
   <!-- ============================================================= -->
   <section id="sent">
-    <h2>14. 感情分析</h2>
+    <h2>15. 感情分析</h2>
     <p class="lead">文書のポジティブ / ネガティブ傾向を定量化する。</p>
 
     <div class="diagram">
@@ -942,7 +1123,7 @@
 
   <!-- ============================================================= -->
   <section id="ts">
-    <h2>15. 時系列分析</h2>
+    <h2>16. 時系列分析</h2>
     <p class="lead">日付列がある場合、テキストの「時間的変化」を追える。</p>
 
     <h3>単語トレンド</h3>
@@ -999,7 +1180,7 @@
 
   <!-- ============================================================= -->
   <section id="coding">
-    <h2>16. コーディング</h2>
+    <h2>17. コーディング</h2>
     <p class="lead">
       ユーザー定義のルールに従って文書にコードを付与し、集計する。
       計量テキスト分析で広く用いられる手法で、KH Coder の「コーディングルール」機能と同種の仕組み。

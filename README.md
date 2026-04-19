@@ -3,9 +3,22 @@
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](./LICENSE)
 [![Docker](https://img.shields.io/badge/docker-compose-blue)](./docker-compose.yml)
 [![Python](https://img.shields.io/badge/Python-3.11-blue)](https://www.python.org/)
+[![Guide](https://img.shields.io/badge/📖_解析ガイド-GitHub_Pages-2c5282)](https://norio-hanafusa.github.io/text-viz/analysis_guide.html)
 
 **jp_nlp_toolkit 全機能** を内包する汎用テキスト解析 GUI(自己完結型・LLM非依存)。
 日本語/英語の両方に対応し、**計量テキスト分析**(頻度・共起・対応分析・コーディング等、KH Coder で知られる領域)に加え、**現代的 NLP**(分散表現・NER・感情分析・トピックモデル)をブラウザで利用できます。
+
+## 📖 解析ガイド (GitHub Pages)
+
+各分析手法の **意味・指標・解釈・使い方** を図解したブラウザ向けガイドを公開しています。
+
+### 👉 [**解析ガイドを開く**](https://norio-hanafusa.github.io/text-viz/analysis_guide.html)
+
+17 セクション(頻度 / 共起 / 対応分析 / クラスタリング / **SOM** / トピックモデル / 分散表現 / NER / 係り受け / 感情分析 / 時系列 / コーディング等)を、SVG 図解と指標の解釈表入りで網羅。
+
+> **初回のみ** GitHub 側で設定が必要です:
+> [Settings → Pages](https://github.com/norio-hanafusa/text-viz/settings/pages) → **Source: Deploy from a branch** → **Branch: `main` / `/ (root)`** → Save
+> 数分後に上記 URL で公開されます。ローカルで見る場合は [`analysis_guide.html`](./analysis_guide.html) を直接開いてください。
 
 コアエンジン `jp_nlp_toolkit/` はリポジトリ内に同梱されており、**別途 pip install は不要**です。
 
