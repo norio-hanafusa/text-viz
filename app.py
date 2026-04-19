@@ -35,6 +35,31 @@ st.set_page_config(page_title="text-viz", layout="wide", page_icon="🧪")
 st.title("🧪 text-viz")
 st.caption("jp-nlp-toolkit 全機能を搭載した汎用テキスト解析 GUI (LLM非依存)")
 
+
+def embed_html(html_content: str, height: int = 720, scrolling: bool = True) -> None:
+    """HTML を st.iframe で埋め込む (非推奨の st.components.v1.html の代替)。
+
+    `st.iframe` は `scrolling` 引数を持たないため、代わりに HTML 自体に
+    `<style>html,body{overflow:auto !important;}</style>` を注入することで、
+    iframe 内のスクロールを確実に有効化する。HTML5 以降、iframe のスクロール
+    挙動は埋め込み先の CSS (overflow) で決まり、iframe タグ側の属性は不要。
+    """
+    import base64
+
+    if scrolling:
+        style_tag = (
+            "<style>html,body{overflow:auto !important;margin:0;padding:0;}</style>"
+        )
+        if "</head>" in html_content:
+            html_content = html_content.replace("</head>", style_tag + "</head>", 1)
+        else:
+            # <head> が無い断片 (裸 SVG 等) の場合は先頭に挿入
+            html_content = style_tag + html_content
+
+    b64 = base64.b64encode(html_content.encode("utf-8")).decode()
+    data_uri = f"data:text/html;charset=utf-8;base64,{b64}"
+    st.iframe(data_uri, height=height)
+
 OUTPUT_DIR = Path(os.environ.get("TEXT_VIZ_OUTPUT", "output"))
 OUTPUT_DIR.mkdir(exist_ok=True, parents=True)
 
@@ -219,10 +244,10 @@ with TABS[0]:
     c1, c2, c3 = st.columns(3)
     with c1:
         st.markdown("**原文**")
-        st.text_area("", raw_texts[idx], height=150, key="prev_raw", label_visibility="collapsed")
+        st.text_area("原文", raw_texts[idx], height=150, key="prev_raw", label_visibility="collapsed")
     with c2:
         st.markdown("**正規化後**")
-        st.text_area("", norm_texts[idx], height=150, key="prev_norm", label_visibility="collapsed")
+        st.text_area("正規化後", norm_texts[idx], height=150, key="prev_norm", label_visibility="collapsed")
     with c3:
         st.markdown("**トークン (フィルタ後)**")
         st.write(tokens_filtered[idx])
@@ -378,7 +403,7 @@ with TABS[2]:
         if meta["communities"]:
             st.caption(f"コミュニティ数: {len(set(meta['communities'].values()))}")
         if meta["html"]:
-            st.components.v1.html(meta["html"], height=720, scrolling=True)
+            embed_html(meta["html"], height=720, scrolling=True)
 
         cA, cB = st.columns(2)
         with cA:
@@ -616,7 +641,7 @@ with TABS[4]:
                     vis_path = str(OUTPUT_DIR / "lda.html")
                     try:
                         lda.visualize(vis_path)
-                        st.components.v1.html(
+                        embed_html(
                             Path(vis_path).read_text(encoding="utf-8"),
                             height=800, scrolling=True,
                         )
@@ -760,7 +785,7 @@ with TABS[6]:
                 dep = DependencyParser(engine=dep_engine)
                 # displacy SVG
                 svg = dep.visualize(raw_texts[sample_idx])
-                st.components.v1.html(svg, height=250, scrolling=True)
+                embed_html(svg, height=250, scrolling=True)
                 # 全文書からペア集計
                 from collections import Counter
                 pairs: Counter = Counter()

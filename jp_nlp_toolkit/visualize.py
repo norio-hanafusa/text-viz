@@ -113,14 +113,27 @@ def network_interactive(
 ) -> str:
     pyvis = optional_import("pyvis", "pyvis")
     from pyvis.network import Network
+    from .cooccurrence import _PYVIS_PHYSICS_OPTIONS, _inject_pyvis_auto_stop
+
     net = Network(height="700px", width="100%", notebook=False)
+    try:
+        net.set_options(_PYVIS_PHYSICS_OPTIONS)
+    except Exception:
+        pass
     for n, data in graph.nodes(data=True):
         size = 10 + (data.get("frequency", 1) ** 0.5) * 3
         group = communities.get(n, 0) if communities else 0
-        net.add_node(n, label=str(n), size=size, group=group)
+        freq = data.get("frequency", 0)
+        tooltip_parts = [str(n), f"frequency: {freq}"]
+        if communities:
+            tooltip_parts.append(f"community: {group}")
+        title = "\n".join(tooltip_parts)
+        net.add_node(n, label=str(n), size=size, group=group, title=title)
     for a, b, data in graph.edges(data=True):
-        net.add_edge(a, b, value=float(data.get("weight", 1)))
+        edge_title = f"{a} — {b}\nweight: {float(data.get('weight', 1)):.3f}"
+        net.add_edge(a, b, value=float(data.get("weight", 1)), title=edge_title)
     net.write_html(output, notebook=False)
+    _inject_pyvis_auto_stop(output)
     return output
 
 

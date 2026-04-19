@@ -23,6 +23,8 @@ def word_frequency(
         df.update(set(doc))
 
     rows = [{"word": w, "tf": c, "df": df[w]} for w, c in tf.items()]
+    if not rows:
+        return pd.DataFrame(columns=["word", "tf", "df"])
     out = pd.DataFrame(rows).sort_values("tf", ascending=False).reset_index(drop=True)
     return out.head(top_n) if top_n else out
 
@@ -36,6 +38,8 @@ def ngram_frequency(
     for doc in docs:
         c.update(tuple(doc[i : i + n]) for i in range(len(doc) - n + 1))
     rows = [{"ngram": " ".join(k), "count": v} for k, v in c.items()]
+    if not rows:
+        return pd.DataFrame(columns=["ngram", "count"])
     out = pd.DataFrame(rows).sort_values("count", ascending=False).reset_index(drop=True)
     return out.head(top_n) if top_n else out
 

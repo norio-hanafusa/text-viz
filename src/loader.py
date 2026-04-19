@@ -15,8 +15,10 @@ def load_file(uploaded) -> pd.DataFrame:
     data = uploaded.getvalue()
     if name.endswith(".csv"):
         return pd.read_csv(io.BytesIO(data))
-    if name.endswith((".xlsx", ".xls")):
-        return pd.read_excel(io.BytesIO(data))
+    if name.endswith(".xlsx"):
+        return pd.read_excel(io.BytesIO(data), engine="openpyxl")
+    if name.endswith(".xls"):
+        return pd.read_excel(io.BytesIO(data), engine="xlrd")
     if name.endswith(".tsv"):
         return pd.read_csv(io.BytesIO(data), sep="\t")
     if name.endswith(".json"):

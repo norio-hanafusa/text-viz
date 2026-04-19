@@ -159,13 +159,36 @@ class CooccurrenceNetwork:
             except ImportError:
                 communities = {}
         net = Network(height="700px", width="100%", notebook=False)
+
+        # 物理演算: 素早く安定化させ、安定後は停止 (ゆれ防止)
+        try:
+            net.set_options(_PYVIS_PHYSICS_OPTIONS)
+        except Exception:
+            pass
+
         for n, data in self.graph.nodes(data=True):
             size = 10 + (data.get(size_by, 1) ** 0.5) * 3
             group = communities.get(n, 0) if communities else 0
-            net.add_node(n, label=n, size=size, group=group, title=f"freq: {data.get('frequency', 0)}")
+            freq = data.get("frequency", 0)
+            # vis-network のツールチップは HTML をパースしないので、改行文字で整形
+            tooltip_parts = [str(n), f"frequency: {freq}"]
+            if communities:
+                tooltip_parts.append(f"community: {group}")
+            title = "\n".join(tooltip_parts)
+            net.add_node(n, label=n, size=size, group=group, title=title)
         for a, b, data in self.graph.edges(data=True):
-            net.add_edge(a, b, value=float(data.get("weight", 1)))
+            edge_lines = [
+                f"{a} — {b}",
+                f"weight: {float(data.get('weight', 1)):.3f}",
+            ]
+            if "cooccur" in data:
+                edge_lines.append(f"cooccur: {data['cooccur']}")
+            edge_title = "\n".join(edge_lines)
+            net.add_edge(a, b, value=float(data.get("weight", 1)), title=edge_title)
         net.write_html(output, notebook=False)
+
+        # 安定化完了時に physics を無効化する JS を HTML に注入
+        _inject_pyvis_auto_stop(output)
         return output
 
     def _visualize_matplotlib(self, color_by, size_by, communities):
@@ -203,3 +226,70 @@ class CooccurrenceNetwork:
 def _split_sentences(text: str) -> list[str]:
     import re
     return [s.strip() for s in re.split(r"[。.!?！？\n]+", text) if s.strip()]
+
+
+# ---------------------------------------------------------------------------
+# pyvis 物理演算設定 — ネットワークのゆれ (continuous shaking) を防止
+# ---------------------------------------------------------------------------
+
+_PYVIS_PHYSICS_OPTIONS = """
+{
+  "physics": {
+    "barnesHut": {
+      "gravitationalConstant": -15000,
+      "centralGravity": 0.3,
+      "springLength": 150,
+      "springConstant": 0.05,
+      "damping": 0.6,
+      "avoidOverlap": 0.3
+    },
+    "minVelocity": 0.75,
+    "stabilization": {
+      "enabled": true,
+      "iterations": 1500,
+      "updateInterval": 50,
+      "fit": true
+    }
+  },
+  "interaction": {
+    "hover": true,
+    "dragNodes": true,
+    "zoomView": true
+  }
+}
+"""
+
+# 安定化完了後に physics を切る JS スニペット
+_PYVIS_AUTO_STOP_JS = """
+<script type="text/javascript">
+(function() {
+  var stopPhysics = function() {
+    if (typeof network !== "undefined") {
+      try { network.setOptions({ physics: { enabled: false } }); } catch (e) {}
+    }
+  };
+  if (typeof network !== "undefined") {
+    network.on("stabilizationIterationsDone", stopPhysics);
+  }
+  // フォールバック: 5秒経っても安定化完了イベントが来ない場合は強制停止
+  setTimeout(stopPhysics, 5000);
+})();
+</script>
+"""
+
+
+def _inject_pyvis_auto_stop(output: str) -> None:
+    """pyvis 生成 HTML の </body> 直前に auto-stop JS を差し込む。"""
+    try:
+        with open(output, encoding="utf-8") as f:
+            html = f.read()
+        if _PYVIS_AUTO_STOP_JS.strip() in html:
+            return  # すでに適用済み
+        if "</body>" in html:
+            html = html.replace("</body>", _PYVIS_AUTO_STOP_JS + "</body>")
+        else:
+            html = html + _PYVIS_AUTO_STOP_JS
+        with open(output, "w", encoding="utf-8") as f:
+            f.write(html)
+    except Exception:
+        pass  # 失敗しても可視化自体は動作する
