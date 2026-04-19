@@ -1,0 +1,19 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+.streamlit/
+# data/ は基本的にユーザーアップロード用 (git 管理外) だが、
+# サンプルデータだけは例外的に追跡
+data/*
+!data/sample_incidents.csv
+output/
+nltk_data/
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.faiss
+*.pkl
+*.model
