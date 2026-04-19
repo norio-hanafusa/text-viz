@@ -1,4 +1,4 @@
-"""コーディングルール (KH Coder 相当)。"""
+"""コーディングルール機能の独自実装。KH Coder で提供される同種機能を参考にしている。"""
 from __future__ import annotations
 
 import re

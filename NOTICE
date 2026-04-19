@@ -1,0 +1,69 @@
+text-viz
+Copyright 2026 norio-hanafusa
+
+This product includes software developed by the copyright holder above.
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+================================================================================
+Bundled software
+================================================================================
+
+このリポジトリには同梱された Python パッケージ `jp_nlp_toolkit/` が含まれます。
+同パッケージも同じ著作者による Apache-2.0 ライセンスのソフトウェアであり、
+独立したリポジトリ jp-nlp-toolkit (https://github.com/norio-hanafusa/jp-nlp-toolkit)
+としても公開されています。
+
+================================================================================
+Attribution — 機能設計の着想を得た先行ソフトウェア
+================================================================================
+
+本プロジェクトは以下のソフトウェアから機能設計の着想を得ています。
+これらのソースコードは流用していません。
+
+- KH Coder (https://khcoder.net/) by Koichi Higuchi
+  対応分析 / コーディングルール / 特徴語抽出 / KWIC 等の機能設計
+- nlplot (https://github.com/takapy0210/nlplot) by takapy0210
+  共起ネットワーク / ワードクラウド / Treemap 等の可視化
+
+================================================================================
+Bundled via pip dependencies (個別ライセンスは各ライブラリを参照)
+================================================================================
+
+UI:
+  - Streamlit (Apache-2.0)
+
+日本語形態素解析・構文解析:
+  - fugashi (MIT), unidic-lite (BSD-3 + MeCab license)
+  - ja-ginza (MIT), spaCy (MIT)
+  - SudachiPy / SudachiDict (Apache-2.0)
+  - jaconv (MIT), neologdn (Apache-2.0), ipadic (Apache-2.0)
+
+基本解析:
+  - pandas / numpy / scipy / scikit-learn / NetworkX (BSD-3-Clause)
+  - NLTK (Apache-2.0)
+
+可視化:
+  - matplotlib (PSF-based)
+  - plotly / wordcloud / nlplot / japanize-matplotlib (MIT)
+  - seaborn / pyvis / pyLDAvis (BSD-3-Clause)
+
+統計・機械学習:
+  - gensim (LGPL-2.1+)  ※ 動的リンクでの利用のため本プロジェクトのライセンスには影響なし
+  - umap-learn / python-louvain (BSD-3-Clause)
+  - prince (MIT), minisom (CC-BY-3.0)
+
+埋め込み・類似度:
+  - sentence-transformers / transformers (Apache-2.0)
+  - PyTorch (BSD-style)
+  - FAISS (MIT)
+
+感情分析:
+  - oseti (MIT), bunkai (Apache-2.0)
+
+================================================================================
+Sample data
+================================================================================
+
+data/sample_incidents.csv:
+  Fictional medical safety incident reports, created for this project.
+  No personal information included.

@@ -1,6 +1,6 @@
 # text-viz - マニュアル
 
-[jp-nlp-toolkit](https://github.com/norio-hanafusa/jp-nlp-toolkit) 全機能を内包する**汎用テキスト解析 GUI**。日本語/英語両対応、LLM 非依存。KH Coder + nlplot 以上の機能をブラウザ上で提供します。
+[jp-nlp-toolkit](https://github.com/norio-hanafusa/jp-nlp-toolkit) 全機能を内包する**汎用テキスト解析 GUI**。日本語/英語両対応、LLM 非依存。**計量テキスト分析**(頻度・共起・対応分析・コーディング等、KH Coder で知られる領域)と**現代的 NLP**(分散表現・NER・感情分析・トピックモデル)をブラウザ上で提供します。
 
 ---
 
@@ -206,7 +206,7 @@ docker compose down
 
 サブタブから 4 つの手法を選択:
 
-#### 対応分析 (CA) — KH Coder の目玉機能
+#### 対応分析 (CA) — カテゴリと語を同じ平面に布置
 
 - **カテゴリ列 × 頻出語** のクロス表を主成分分析
 - カテゴリと語を**同じ 2 次元平面にプロット**
@@ -355,7 +355,7 @@ docker compose down
 
 ### 6.10 コーディング
 
-KH Coder のコーディングルール機能を再現。
+計量テキスト分析で広く用いられるコーディングルール機能(KH Coder で知られる仕組みと同種)を独自実装。
 
 YAML でルールを定義:
 ```yaml
@@ -525,7 +525,25 @@ cp -r ../jp-nlp-toolkit/jp_nlp_toolkit ./
 
 - [jp-nlp-toolkit](https://github.com/norio-hanafusa/jp-nlp-toolkit) — コアライブラリ
 - [pubmed-viz](https://github.com/norio-hanafusa/pubmed-viz) — PubMed 論文特化の姉妹プロジェクト
-- [KH Coder 公式](https://khcoder.net/) — 計量テキスト分析の代表ツール
-- [nlplot](https://github.com/takapy0210/nlplot) — 可視化ライブラリ
-- [GiNZA](https://megagonlabs.github.io/ginza/) — 日本語 NLP フレームワーク
-- [oseti](https://github.com/ikegami-yukino/oseti) — 日本語感情分析
+
+---
+
+## 謝辞 (Acknowledgements)
+
+本プロジェクトは以下の先行ソフトウェアから**機能設計の着想**を得ています。
+コードの流用はなく、いずれも独立した別プロジェクトです。
+
+- **[KH Coder](https://khcoder.net/)** (樋口耕一氏) — 計量テキスト分析の代表ツール。
+  対応分析・コーディングルール・特徴語抽出・KWIC 等の機能設計を参考にしました
+- **[nlplot](https://github.com/takapy0210/nlplot)** (takapy0210 氏) — Python の
+  テキスト可視化ライブラリ。共起ネットワーク / ワードクラウド / Treemap の実装で参考にしました
+- **[GiNZA](https://megagonlabs.github.io/ginza/)** / **[fugashi](https://github.com/polm/fugashi)** /
+  **[SudachiPy](https://github.com/WorksApplications/SudachiPy)** — 日本語形態素解析・係り受け解析
+- **[oseti](https://github.com/ikegami-yukino/oseti)** / **[neologdn](https://github.com/ikegami-yukino/neologdn)** (池上雄一郎氏)
+- **[gensim](https://radimrehurek.com/gensim/)** / **[scikit-learn](https://scikit-learn.org/)** /
+  **[sentence-transformers](https://www.sbert.net/)** / **[FAISS](https://github.com/facebookresearch/faiss)** /
+  **[prince](https://github.com/MaxHalford/prince)** / **[NetworkX](https://networkx.org/)** /
+  **[pyvis](https://github.com/WestHealth/pyvis)** / **[pyLDAvis](https://github.com/bmabey/pyLDAvis)**
+
+これらの優れたプロジェクトと、Benzécri (1973) / Dunning (1993) / Blei (2003) /
+Mikolov (2013) / Reimers & Gurevych (2019) 等の研究成果の上に成立しています。

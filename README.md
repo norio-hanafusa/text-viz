@@ -1,7 +1,11 @@
 # text-viz
 
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](./LICENSE)
+[![Docker](https://img.shields.io/badge/docker-compose-blue)](./docker-compose.yml)
+[![Python](https://img.shields.io/badge/Python-3.11-blue)](https://www.python.org/)
+
 **jp_nlp_toolkit 全機能** を内包する汎用テキスト解析 GUI(自己完結型・LLM非依存)。
-日本語/英語の両方に対応し、KH Coder + nlplot 以上の機能をブラウザで利用可能。
+日本語/英語の両方に対応し、**計量テキスト分析**(頻度・共起・対応分析・コーディング等、KH Coder で知られる領域)に加え、**現代的 NLP**(分散表現・NER・感情分析・トピックモデル)をブラウザで利用できます。
 
 コアエンジン `jp_nlp_toolkit/` はリポジトリ内に同梱されており、**別途 pip install は不要**です。
 
@@ -106,3 +110,32 @@ cp -r ../jp-nlp-toolkit/jp_nlp_toolkit ./
 | タブ数 | 10 | 5 |
 | 主眼 | **網羅性** (全機能) | **特化性** (PubMed 分析) |
 | 起動ポート | 8502 | 8501 |
+
+## 謝辞 (Acknowledgements)
+
+本プロジェクトは以下の先行ソフトウェアから**機能設計の着想**を得ています。
+コードの流用はなく、いずれも独立した別プロジェクトです。
+
+- **[KH Coder](https://khcoder.net/)** (樋口耕一氏) — 計量テキスト分析の代表ツール。
+  対応分析・コーディングルール・特徴語抽出・KWIC 等の機能設計を参考にしました
+- **[nlplot](https://github.com/takapy0210/nlplot)** (takapy0210 氏) — Python の
+  テキスト可視化ライブラリ。共起ネットワーク / ワードクラウド / Treemap 等で参考にしました
+- **[GiNZA](https://megagonlabs.github.io/ginza/)** / **[fugashi](https://github.com/polm/fugashi)** /
+  **[SudachiPy](https://github.com/WorksApplications/SudachiPy)**
+- **[oseti](https://github.com/ikegami-yukino/oseti)** / **[neologdn](https://github.com/ikegami-yukino/neologdn)** (池上雄一郎氏)
+- **[gensim](https://radimrehurek.com/gensim/)** / **[scikit-learn](https://scikit-learn.org/)** /
+  **[sentence-transformers](https://www.sbert.net/)** / **[FAISS](https://github.com/facebookresearch/faiss)**
+
+これらの優れたプロジェクトと学術研究の成果の上に成立しています。
+
+## ライセンス
+
+本プロジェクトは **[Apache License 2.0](./LICENSE)** で公開されています。
+
+- ✅ 商用利用・改変・再配布・社内/製品への組み込み — すべて可能(無償)
+- 📄 再配布時は [LICENSE](./LICENSE) と [NOTICE](./NOTICE) を含めてください
+- 🔒 特許権の明示的付与条項あり(企業利用時の法務リスク軽減)
+- 🚫 改変ファイルには変更の旨を明示(Apache 2.0 §4b)
+
+同梱の `jp_nlp_toolkit/` パッケージも同じ著作者による Apache-2.0 ライセンスです。
+各依存ライブラリは別ライセンスで配布されています — 詳細は [NOTICE](./NOTICE) を参照。

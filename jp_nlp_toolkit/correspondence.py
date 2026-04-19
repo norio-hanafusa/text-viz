@@ -1,4 +1,4 @@
-"""対応分析 (CA / MCA) — KH Coder の目玉機能の再現。"""
+"""対応分析 (CA / MCA)。計量テキスト分析で古くから用いられる手法 (Benzécri, 1973)。"""
 from __future__ import annotations
 
 from collections import Counter

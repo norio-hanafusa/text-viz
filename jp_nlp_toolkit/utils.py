@@ -100,23 +100,36 @@ def load_spacy_model(name: str, **kwargs):
 
 
 def ensure_font(font_path: Optional[str] = None) -> Optional[str]:
-    """日本語フォント (matplotlib 向け) の解決。japanize-matplotlib が使える場合は適用。"""
+    """日本語フォントのパスを解決する。WordCloud は `font_path` を直接要求するため、
+    japanize-matplotlib が入っていても**物理パス**を返す必要がある。
+    """
     if font_path:
         return font_path
-    try:
-        import japanize_matplotlib  # noqa: F401
-        return None
-    except ImportError:
-        pass
-    # Windows フォールバック
     candidates = [
+        # Windows
         "C:/Windows/Fonts/meiryo.ttc",
         "C:/Windows/Fonts/YuGothM.ttc",
         "C:/Windows/Fonts/msgothic.ttc",
+        # macOS
         "/System/Library/Fonts/ヒラギノ角ゴシック W3.ttc",
+        # Linux (Debian/Ubuntu、fonts-noto-cjk 導入後)
+        "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+        "/usr/share/fonts/opentype/noto/NotoSansCJK.ttc",
+        "/usr/share/fonts/opentype/noto/NotoSerifCJK-Regular.ttc",
         "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
     ]
     for p in candidates:
         if Path(p).exists():
             return p
+    # japanize-matplotlib 同梱の IPAexGothic をフォールバックに使用
+    try:
+        import japanize_matplotlib
+        import os
+        fpath = os.path.join(
+            os.path.dirname(japanize_matplotlib.__file__), "fonts", "ipaexg.ttf"
+        )
+        if os.path.exists(fpath):
+            return fpath
+    except ImportError:
+        pass
     return None

@@ -252,6 +252,30 @@ with TABS[1]:
         )
 
     st.divider()
+    cw, ct = st.columns(2)
+    with cw:
+        st.subheader("☁️ ワードクラウド")
+        try:
+            with st.spinner("生成中…"):
+                wc_fig = visualize.wordcloud(
+                    tokens_filtered,
+                    max_words=min(int(top_n) * 3, 200),
+                )
+                st.pyplot(wc_fig)
+        except ImportError as e:
+            st.warning(str(e))
+        except ValueError as e:
+            st.warning(f"ワードクラウドを生成できません: {e}(トークンが空の可能性)")
+    with ct:
+        st.subheader("🧩 Treemap")
+        tm_df = freq_df.head(min(int(top_n), 50))
+        if not tm_df.empty:
+            tm_fig = visualize.treemap(tm_df, group_col="word", value_col="tf", title="頻出語 Treemap")
+            st.plotly_chart(tm_fig, width="stretch")
+        else:
+            st.info("対象語がありません。")
+
+    st.divider()
     st.subheader("N-gram")
     n = st.selectbox("N", [2, 3, 4, 5], index=0, key="ngram_n")
     st.dataframe(ngram_frequency(tokens_filtered, n=n, top_n=top_n), width="stretch")
@@ -311,6 +335,8 @@ with TABS[2]:
         key="net_comm_alg",
     )
 
+    # 構築ボタンは「重い処理 (グラフ構築) の起動」専用。
+    # 結果は st.session_state に保存し、ドロップダウン変更時も保持する。
     if st.button("構築", key="net_build"):
         with st.spinner("ネットワーク構築中…"):
             net = CooccurrenceNetwork(tokens_filtered, scope=scope, window_size=5)
@@ -318,50 +344,66 @@ with TABS[2]:
                 min_edge_weight=int(min_edge_weight),
                 measure=edge_measure, top_n_nodes=int(top_nodes),
             )
-            st.write(f"nodes: {G.number_of_nodes()}, edges: {G.number_of_edges()}")
-
             communities = None
             if community_alg != "(なし)":
                 try:
                     communities = net.detect_communities(community_alg)
-                    st.caption(f"コミュニティ数: {len(set(communities.values()))}")
                 except ImportError as e:
                     st.warning(str(e))
 
-            # pyvis インタラクティブ可視化
+            # pyvis HTML を生成して読み込み
             out_html = str(OUTPUT_DIR / "network.html")
+            html_content = None
             try:
                 net.visualize(
                     backend="pyvis", output=out_html, communities=communities,
                 )
-                st.components.v1.html(
-                    Path(out_html).read_text(encoding="utf-8"),
-                    height=720, scrolling=True,
-                )
+                html_content = Path(out_html).read_text(encoding="utf-8")
             except ImportError as e:
                 st.warning(str(e))
 
-            # ノード/エッジ表 + 中心性
-            cA, cB = st.columns(2)
-            with cA:
-                st.markdown("**ノード (上位)**")
-                node_df = net.node_dataframe().sort_values("frequency", ascending=False).head(30)
-                st.dataframe(node_df, width="stretch")
-            with cB:
-                st.markdown("**中心性**")
-                c_measure = st.selectbox(
-                    "指標", ["betweenness", "closeness", "eigenvector", "pagerank", "degree"],
-                    key="cent_m",
-                )
-                try:
-                    cent = net.centrality(c_measure)
-                    cent_df = pd.DataFrame(
-                        sorted(cent.items(), key=lambda x: -x[1]),
-                        columns=["node", c_measure],
-                    ).head(30)
-                    st.dataframe(cent_df, width="stretch")
-                except Exception as e:
-                    st.warning(str(e))
+            st.session_state["_net_obj"] = net
+            st.session_state["_net_meta"] = {
+                "nodes": G.number_of_nodes(),
+                "edges": G.number_of_edges(),
+                "communities": communities,
+                "html": html_content,
+            }
+
+    # ---- 結果表示 (再 rerun でも保持) ----
+    net = st.session_state.get("_net_obj")
+    meta = st.session_state.get("_net_meta")
+    if net is not None and meta is not None:
+        st.write(f"nodes: {meta['nodes']}, edges: {meta['edges']}")
+        if meta["communities"]:
+            st.caption(f"コミュニティ数: {len(set(meta['communities'].values()))}")
+        if meta["html"]:
+            st.components.v1.html(meta["html"], height=720, scrolling=True)
+
+        cA, cB = st.columns(2)
+        with cA:
+            st.markdown("**ノード (上位)**")
+            node_df = (
+                net.node_dataframe().sort_values("frequency", ascending=False).head(30)
+            )
+            st.dataframe(node_df, width="stretch")
+        with cB:
+            st.markdown("**中心性**")
+            c_measure = st.selectbox(
+                "指標", ["betweenness", "closeness", "eigenvector", "pagerank", "degree"],
+                key="cent_m",
+            )
+            try:
+                cent = net.centrality(c_measure)
+                cent_df = pd.DataFrame(
+                    sorted(cent.items(), key=lambda x: -x[1]),
+                    columns=["node", c_measure],
+                ).head(30)
+                st.dataframe(cent_df, width="stretch")
+            except Exception as e:
+                st.warning(str(e))
+    else:
+        st.info("パラメータを設定して「構築」ボタンを押してください。")
 
 
 # -----------------------------------------------------------------------------
