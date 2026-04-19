@@ -481,17 +481,87 @@ with TABS[3]:
         from jp_nlp_toolkit import SOM
         from sklearn.feature_extraction.text import TfidfVectorizer
 
-        x_size = st.number_input("X", 4, 20, 10, key="som_x")
-        y_size = st.number_input("Y", 4, 20, 10, key="som_y")
-        iters = st.number_input("iterations", 100, 5000, 500, step=100, key="som_it")
+        st.caption("学習後、複数の可視化モードで「各セルが何を表すか」を多角的に評価できます。")
+        c1, c2, c3 = st.columns(3)
+        x_size = c1.number_input("X", 4, 20, 10, key="som_x")
+        y_size = c2.number_input("Y", 4, 20, 10, key="som_y")
+        iters = c3.number_input("iterations", 100, 5000, 500, step=100, key="som_it")
+
         if st.button("SOM 学習", key="som_run"):
-            try:
-                joined = [" ".join(t) for t in tokens_filtered]
-                X = TfidfVectorizer(token_pattern=r"(?u)\S+").fit_transform(joined).toarray()
-                som = SOM(x=int(x_size), y=int(y_size)).fit(X, iterations=int(iters))
-                st.pyplot(som.plot())
-            except ImportError as e:
-                st.error(f"依存ライブラリ不足 (pip install minisom): {e}")
+            with st.spinner("SOM 学習中…"):
+                try:
+                    joined = [" ".join(t) for t in tokens_filtered]
+                    vec = TfidfVectorizer(token_pattern=r"(?u)\S+")
+                    X = vec.fit_transform(joined).toarray()
+                    feature_names = list(vec.get_feature_names_out())
+                    som = SOM(x=int(x_size), y=int(y_size)).fit(X, iterations=int(iters))
+                    st.session_state["_som"] = som
+                    st.session_state["_som_features"] = feature_names
+                    st.session_state["_som_raw_texts"] = raw_texts
+                    st.success(f"学習完了 ({X.shape[0]} 文書 × {X.shape[1]} 語彙)")
+                except ImportError as e:
+                    st.error(f"依存ライブラリ不足 (pip install minisom): {e}")
+
+        # 学習済みなら可視化
+        som_obj = st.session_state.get("_som")
+        if som_obj is not None:
+            features = st.session_state.get("_som_features", [])
+            som_docs = st.session_state.get("_som_raw_texts", raw_texts)
+
+            st.divider()
+            viz_mode = st.radio(
+                "可視化モード",
+                [
+                    "① U-Matrix (クラスタ境界)",
+                    "② Hit Map (文書度数)",
+                    "③ Top-N 単語 (セルラベル)",
+                    "④ Component Plane (単語別)",
+                    "⑤ 代表文書",
+                    "⑥ カテゴリ重ね描き",
+                ],
+                horizontal=False, key="som_viz_mode",
+            )
+
+            if viz_mode.startswith("①"):
+                st.pyplot(som_obj.plot())
+                st.caption("濃色 = セル間距離が大 = クラスタ境界。連続した明色領域が 1 つのクラスタ。")
+
+            elif viz_mode.startswith("②"):
+                st.pyplot(som_obj.hit_map())
+                st.caption("各セル内に文書数を表示。空セル = データなし(外れ値の緩衝帯)。")
+
+            elif viz_mode.startswith("③"):
+                top_n_w = st.slider("各セルの単語数", 1, 5, 3, key="som_topn_words")
+                st.pyplot(som_obj.top_words_fig(features, top_n=int(top_n_w)))
+                st.caption("各セルの重みベクトルで上位の単語 = そのセルの「意味」。")
+
+            elif viz_mode.startswith("④"):
+                # 頻度上位から選択候補を作る
+                import numpy as np
+                weights_sum = som_obj._som.get_weights().sum(axis=(0, 1))
+                top_idx = np.argsort(weights_sum)[::-1][:100]
+                candidate_words = [features[i] for i in top_idx]
+                chosen = st.selectbox(
+                    "単語を選択 (重み合計 top 100)", candidate_words, key="som_cp_word",
+                )
+                if chosen:
+                    idx = features.index(chosen)
+                    st.pyplot(som_obj.component_plane(idx, feature_name=chosen))
+                    st.caption("この単語の重みが高いセル = その単語を特徴とする領域。")
+
+            elif viz_mode.startswith("⑤"):
+                top_per = st.slider("各セルで表示する代表文書数", 1, 3, 1, key="som_rep_n")
+                rep_df = som_obj.representative_docs_df(som_docs, top_per_cell=int(top_per))
+                st.dataframe(rep_df, width="stretch")
+                st.caption("各セルで重みに最も近い文書 = そのセルを典型的に表現する文書。")
+
+            elif viz_mode.startswith("⑥"):
+                if label_col == "(なし)":
+                    st.info("サイドバーでカテゴリ列を選択してください。")
+                else:
+                    labels = df_raw[label_col].astype(str).tolist()
+                    st.pyplot(som_obj.label_overlay(labels))
+                    st.caption(f"各セルで最多の「{label_col}」値で色分け。数字は「支配カテゴリ数 / セル内総数」。")
 
     else:  # 特徴語抽出
         from jp_nlp_toolkit import compare_groups
